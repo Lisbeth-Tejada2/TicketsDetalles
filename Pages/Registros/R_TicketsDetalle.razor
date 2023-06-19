@@ -1,0 +1,157 @@
+﻿@page "/R_Detalles"
+@page "/TicketsDetalles/{Id:int}"
+@inject DetalleBLL detalleBLL
+@inject NotificationService notificationService
+
+<EditForm Model="Id" OnInvalidSubmit="Guardar">
+	<DataAnnotationsValidator />
+
+	<div class="container">
+		<div class="card shadow-lg">
+			<div class="card-header">
+				<h3>Registro de Tickets con Detalles</h3>
+			</div>
+			<div class="card-body">
+
+				@*BuscarId*@
+				<div class="col-xs-12 col-sm-12 col-md-8 col-lg-6 col-xl-4">
+					<div class="input-group mb-3">
+						<InputNumber @bind-Value="Detalle.Id" class="form-control" aria-describedby="buscarButton" />
+						<button @onclick="Buscar" class="btn btn-outline-primary" type="button" id="buscarButton">
+							<i class="oi oi-magnifying-glass" />
+						</button>
+					</div>
+				</div>
+
+				@*Id*@
+				<div class="mb-3">
+					<label class="form-label">Id</label>
+					<InputNumber @bind-Value="Detalle.Id" class="form-control" />
+					<ValidationMessage For="@(() => Detalle.Id)" />
+				</div>
+
+				@*TicketId*@
+				<div class="mb-3">
+					<label class="form-label">TicketId</label>
+					<InputNumber @bind-Value="Detalle.TicktetId" class="form-control" />
+					<ValidationMessage For="@(() => Detalle.TicktetId)" />
+				</div>
+
+				@*Emisor*@
+				<div class="mb-3">
+					<label class="forn-label">Emisor</label>
+					<InputText @bind-Value="Detalle.Emisor" class="form-control" />
+					<ValidationMessage For="@(() => Detalle.Emisor)" />
+				</div>
+
+				@*Mensaje*@
+				<div class="mb-3">
+					<label class="forn-label">Mensaje</label>
+					<textarea rows="2" cols="125">Escriba un mensaje</textarea>
+					<ValidationMessage For="@(() => Detalle.Mensaje)"></ValidationMessage>
+				</div>
+
+
+				<div class="card-footer d-flex justify-content-center">
+					<div class="btn-group" role="group">
+						<button type="button" class="btn btn-primary" @onclick="Nuevo"> <i class="oi oi-file" /> Nuevo</button>
+						<button type="submit" class="btn btn-success"> <i class="oi oi-document" /> Guardar</button>
+						<button type="button" class="btn btn-danger" @onclick="Eliminar"><i class="oi oi-trash" /> Eliminar</button>
+					</div>
+				</div>
+
+			</div>
+		</div>
+	</div>
+
+</EditForm>
+
+@code {
+
+	[Parameter]
+	public int Id { get; set; }
+	public TicketsDetalle Detalle { get; set; } = new TicketsDetalle();
+
+	protected override void OnInitialized()
+	{
+		if (Id > 0)
+		{
+			this.Detalle.Id = this.Id;
+			Buscar();
+		}
+	}
+	public void Buscar()
+	{
+		var TicketEncontrado = detalleBLL.Buscar(Detalle.Id);
+		if (TicketEncontrado != null)
+		{
+			this.Detalle = TicketEncontrado;
+		}
+		else
+		{
+			notificationService.ShowNotification(
+			titulo: "Ha ocurrido un error de búsqueda",
+			mensaje: "Este Registro no ha sido encontrado",
+			NotificationSeverity.Error);
+		}
+	}
+	public void Nuevo()
+	{
+		this.Detalle = new TicketsDetalle();
+	}
+
+	public void Guardar()
+	{
+		if (!Validar())
+		{
+			notificationService.ShowNotification(
+				titulo: "Validado",
+				mensaje: "Existe un error, por favor Revise los campos",
+				NotificationSeverity.Error);
+			return;
+		}
+
+		var guardo = detalleBLL.Guardar(this.Detalle);
+		if (guardo)
+		{
+			notificationService.ShowNotification(
+				titulo: "Exito",
+				mensaje: "Guardo correctamente",
+				NotificationSeverity.Success);
+			Nuevo();
+		}
+		else
+		{
+			notificationService.ShowNotification(
+				titulo: "Error",
+				mensaje: "Ocurrio un error y no fue posible guardar",
+				NotificationSeverity.Error);
+		}
+	}
+
+	public void Eliminar()
+	{
+		Buscar();
+		if (detalleBLL.Eliminar(this.Detalle))
+		{
+			notificationService.ShowNotification(
+				titulo: "Exito",
+				mensaje: "Se ha eliminado con exito!",
+				NotificationSeverity.Success);
+			Nuevo();
+		}
+		else
+		{
+			notificationService.ShowNotification(
+				titulo: "Error",
+				mensaje: "Ha ocurrido un error, No se pudo eliminar",
+				NotificationSeverity.Error);
+		}
+	}
+
+	public bool Validar()
+	{
+		return true;
+	}
+
+}
